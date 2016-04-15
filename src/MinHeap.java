@@ -1,8 +1,13 @@
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
+import java.util.Queue;
 
 public class MinHeap<T extends Comparable> implements MyHeap {
 	private Node root = null;
+	private Node lastEditNode = null;
+	private LinkedList<Node> currLevel = new LinkedList<Node>();
+	private LinkedList<Node> nxtLevel = new LinkedList<Node>();
+	
 	public int size = 0;
 	
 	private Node root(){
@@ -22,7 +27,6 @@ public class MinHeap<T extends Comparable> implements MyHeap {
 	private Node search(Comparable item){
 		if(this.isEmpty()) return null;
 		return this.recursiveSearch(this.root(), item);
-		
 	}
 	
 	private Node recursiveSearch(Node node, Comparable item){
@@ -30,49 +34,61 @@ public class MinHeap<T extends Comparable> implements MyHeap {
 		int comp = item.compareTo(node.getData());
 		if(comp == 0) return node;
 		
-		if(comp < 0){
-			return recursiveSearch(node.getLeftChild(), item);
-		}else{
+		
+		node = recursiveSearch(node.getLeftChild(), item);
+			
+		if(node == null){
 			return recursiveSearch(node.getRightChild(), item);
+		}else{
+			return node;
 		}
 	}	
+	
+	private void shiftUp(Node nd){
+		if(nd.getParent() != null){
+			Comparable tmp = nd.getParent().getData();
+			
+			if(tmp.compareTo(nd.getData()) > 0){ //tmp < nd.data
+				nd.getParent().setData(nd.getData());
+				nd.setData(tmp);
+				shiftUp(nd.getParent());
+			}
+		}
+		return;
+	}
 	
 	@Override
 	public boolean insert(Comparable item){
 		if(this.isEmpty()){
 			this.root = new Node(item);
+			this.lastEditNode = this.root();
+			currLevel.add(this.lastEditNode);
 			size++;
 			return true;
 		}else{
-			Node curr = this.root();
-			boolean done = false;
+			Node newNode = new Node(item);			
 			
-			Node newNode = new Node(item);
-			
-			while(!done){
-				int comp = item.compareTo(curr.getData());
-				
-				if(comp == 0){
-					return false;
+			if(this.currLevel.peek().getLeftChild() == null){
+				this.currLevel.peek().setLeftChild(newNode);
+				newNode.setParent(this.currLevel.peek());
+				nxtLevel.add(newNode);
+				this.shiftUp(newNode);
+			}else if(this.currLevel.peek().getRightChild() == null){
+				this.currLevel.peek().setRightChild(newNode);
+				newNode.setParent(this.currLevel.peek());
+				nxtLevel.add(newNode);
+				this.shiftUp(newNode);
+			}else{
+				this.currLevel.poll();
+				if(this.currLevel.isEmpty()){
+					this.currLevel = this.nxtLevel;
+					this.nxtLevel = new LinkedList<Node>();
 				}
-				
-				if(comp < 0){//TODO add under curr
-					if(curr.getLeftChild() == null){
-						curr.setLeftChild(newNode);
-						done = true;
-					}else{
-						curr = curr.getLeftChild();
-					}
-				}else{//TODO add above curr
-					if(curr.getRightChild() == null){
-						curr.setRightChild(newNode);
-						done = true;
-					}else{
-						curr = curr.getRightChild();
-					}
-				}
+				this.currLevel.peek().setLeftChild(newNode);
+				newNode.setParent(this.currLevel.peek());
+				this.nxtLevel.add(newNode);
+				this.shiftUp(newNode);
 			}
-			newNode.setParent(curr);
 			size++;
 			return true;
 		}
@@ -309,9 +325,6 @@ public class MinHeap<T extends Comparable> implements MyHeap {
 		return false;
 	}
 
-	
-
-
 	@Override
 	public boolean union(MyHeap heap) {
 		// TODO Auto-generated method stub
@@ -322,9 +335,5 @@ public class MinHeap<T extends Comparable> implements MyHeap {
 	public Comparable findMin() {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	 
-	
-	
+	}	
 }
