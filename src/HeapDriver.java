@@ -1,4 +1,5 @@
 import java.math.*;
+import java.util.LinkedList;
 public class HeapDriver {
 
 	public static void main(String[] args) {
@@ -22,8 +23,21 @@ public class HeapDriver {
 		for(int i : ints){
 			minHp.insert(i);
 		}
-
 		minHp.printTree();
+		
+		LinkedList<Node> nds = minHp.inOrder();
+		
+		while(nds.size() > 1){
+			int indx = (int) (Math.random() * nds.size());
+			System.out.println(indx);
+			System.out.println(nds.size());
+			
+			minHp.delete(nds.remove(indx));
+			
+			minHp.printTree();
+		}
+
+		
 	}
 
 }

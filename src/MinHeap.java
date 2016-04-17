@@ -5,6 +5,8 @@ import java.util.Queue;
 public class MinHeap<T extends Comparable> implements MyHeap {
 	private Node root = null;
 	private Node lastEditNode = null;
+	private LinkedList<LinkedList<Node>> levels = new LinkedList<LinkedList<Node>>();
+	private LinkedList<Node> prevLevel = new LinkedList<Node>();
 	private LinkedList<Node> currLevel = new LinkedList<Node>();
 	private LinkedList<Node> nxtLevel = new LinkedList<Node>();
 	
@@ -99,91 +101,97 @@ public class MinHeap<T extends Comparable> implements MyHeap {
 			return false;
 		}
 		
-		Node deleteNode = this.search(nd.getData());
-		
-		if(deleteNode == null){
-			return false;
-		}
-		
-		Node hold;
-		
-		if(deleteNode.getRightChild() != null && deleteNode.getLeftChild() != null){
-			hold = this.findPredecessor(deleteNode);
-			deleteNode.setData(hold.getData());
-			deleteNode = hold;
-		}
-		
-		if(deleteNode.getRightChild() == null && deleteNode.getLeftChild() == null){
-			deleteHere(deleteNode, null);
-			size--;
-			return true;
-		}
-		
-		if(deleteNode.getRightChild() != null){
-			hold = deleteNode.getRightChild();
-			deleteNode.setRightChild(null);
+		if(nd == this.root && nd.getLeftChild() == null && nd.getRightChild() == null){
+			this.root = null;
+			nd = null;
 		}else{
-			hold = deleteNode.getLeftChild();
-			deleteNode.setLeftChild(null) ;
+			try {
+				this.deleteAndShift(nd);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-		
-		deleteHere(deleteNode, hold);
-		
-		if(this.root == deleteNode){
 
-		}
 		size--;
 		return true;
 	}
 	
-	private void deleteHere(Node deleteNode, Node attach){
-		Node parent = deleteNode.getParent();
+	private Comparable deleteAndShift(Node nd) throws Exception{
 		
-		if(parent == null){
-			this.root = attach;
-			if(attach != null){
-				attach.setParent(null);
-			}
-			return;
+		if(nd.getRightChild() == null && nd.getLeftChild() != null){
+			Comparable tmp = nd.getData(); 
+			nd.setData(nd.getLeftChild().getData());			
+			return tmp;
 		}
 		
-		if(deleteNode == parent.getLeftChild()){
-			parent.setLeftChild(attach);
-			if(attach != null){
-				attach.setParent(parent);
+		if(nd.getRightChild() != null && nd.getLeftChild() != null){
+			Comparable lData = nd.getLeftChild().getData();
+			Comparable rData = nd.getRightChild().getData();
+			
+			int comp = lData.compareTo(rData);
+			Comparable tmp = nd.getData(); 
+			
+			
+			if(comp > 0){
+				nd.setData(deleteAndShift(nd.getRightChild()));
+			}else{
+				nd.setData(deleteAndShift(nd.getLeftChild()));
 			}
-			deleteNode = null;
-			return;
+			
+			return tmp;
 		}
-		parent.setRightChild(attach);
-		if(attach != null){
-			attach.setParent(parent);
+		
+		
+		if(nd.getRightChild() == null && nd.getLeftChild() == null){
+			
+			Comparable tmp = nd.getData(); 
+			
+			Node p = nd.getParent();
+			
+			if(p.getLeftChild() == nd){
+				p.setLeftChild(null);
+				//move child from the end of nextLevel to here
+				//shift up
+			}
+			
+			
+			
+			
+			return tmp;
+			
+			
+			
+			
+			
+			
+			
+			
+			
+		}else{
+			throw new Exception("Bad Heap");
 		}
-		deleteNode = null;
-		return;
+			
+			
+		
+		
+		
+		
+		
+		
+
 	}
 	
-	private Node findPredecessor(Node node){
-		if(node.getLeftChild() == null){
-			return null;
-		}
-		Node pred = node.getLeftChild();
-		while(pred.getRightChild() != null){
-			pred = pred.getRightChild();
-		}
-		return pred;
-	}
-	
-	public LinkedList<? extends Comparable> inOrder(){
-		LinkedList<Comparable> lst = new LinkedList<Comparable>();
+	public LinkedList<Node> inOrder(){
+		LinkedList<Node> lst = new LinkedList<Node>();
 		this._inOrder(this.root, lst);
 		return lst;
 	}
 	
-	private void _inOrder(Node node, LinkedList<Comparable> lst){
+	private void _inOrder(Node node, LinkedList<Node> lst){
 		if(node != null){
 			this._inOrder(node.getLeftChild(), lst);
-			lst.add(node.getData());
+			lst.add(node);
 			this._inOrder(node.getRightChild(), lst);
 		}
 	}	
