@@ -16,30 +16,35 @@ public class HeapDriver {
 				638,238,842,74,
 				751,621,220,652,
 				370,957,725,176,
-				47,	928,263,113};
+				47,	928,263,113
+				};
 		
 		MinHeap<Integer> minHp = new MinHeap<Integer>();		
 		
-		for(int i : ints){
-			minHp.insert(i);
-		}
-		minHp.printTree();
+//		for(int i : ints){
+//			minHp.insert(i);
+//		}
+//		System.out.println(minHp.size());
+//		minHp.printTree();
 		
-		LinkedList<Node> nds = minHp.inOrder();
-		
-		while(nds.size() > 1){
-			int indx = (int) (Math.random() * nds.size());
-			System.out.println(indx);
-			System.out.println(nds.size());
+		for(int j = 0; j < 10; j++){
 			
-			minHp.delete(nds.remove(indx));
+			for(int i = 0; i < 100; i++){
+				minHp.insert(Math.random());
+			}
+			minHp.printTree();
+			while(minHp.size() > 0){
+				LinkedList<Node> nds = minHp.inOrder();
+				Node nd = nds.get((int)Math.random() * nds.size());
+				minHp.delete(nd);
+			}
+			
+			System.out.println(minHp.isEmpty());
 			
 			minHp.printTree();
+			
 		}
-
-		
 	}
-
 }
 
 

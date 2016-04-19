@@ -10,9 +10,9 @@ public class MinHeap<T extends Comparable> implements MyHeap {
 	private LinkedList<Node> currLevel = new LinkedList<Node>();
 	private LinkedList<Node> nxtLevel = new LinkedList<Node>();
 	
-	public int size = 0;
+	private int size = 0;
 	
-	private Node root(){
+	protected Node root(){
 		return root;
 	}
 	
@@ -24,7 +24,11 @@ public class MinHeap<T extends Comparable> implements MyHeap {
 	
 	public void clear(){
 		root = null;
+		currLevel = new LinkedList<Node>();
+		nxtLevel = new LinkedList<Node>(); 
 	}
+	
+	public int size(){return this.size;}
 	
 	private Node search(Comparable item){
 		if(this.isEmpty()) return null;
@@ -46,22 +50,25 @@ public class MinHeap<T extends Comparable> implements MyHeap {
 		}
 	}	
 	
-	private void shiftUp(Node nd){
+	private Node shiftUp(Node nd){
 		if(nd.getParent() != null){
 			Comparable tmp = nd.getParent().getData();
 			
 			if(tmp.compareTo(nd.getData()) > 0){ //tmp < nd.data
 				nd.getParent().setData(nd.getData());
 				nd.setData(tmp);
-				shiftUp(nd.getParent());
+				return shiftUp(nd.getParent());
 			}
 		}
-		return;
+		return nd;
 	}
+	
+
 	
 	@Override
 	public boolean insert(Comparable item){
 		if(this.isEmpty()){
+			this.clear();
 			this.root = new Node(item);
 			this.lastEditNode = this.root();
 			currLevel.add(this.lastEditNode);
@@ -83,8 +90,10 @@ public class MinHeap<T extends Comparable> implements MyHeap {
 			}else{
 				this.currLevel.poll();
 				if(this.currLevel.isEmpty()){
-					this.currLevel = this.nxtLevel;
-					this.nxtLevel = new LinkedList<Node>();
+					for(Node nds : this.nxtLevel){
+						this.currLevel.add(nds);
+					}
+					this.nxtLevel.clear();
 				}
 				this.currLevel.peek().setLeftChild(newNode);
 				newNode.setParent(this.currLevel.peek());
@@ -105,81 +114,65 @@ public class MinHeap<T extends Comparable> implements MyHeap {
 			this.root = null;
 			nd = null;
 		}else{
-			try {
-				this.deleteAndShift(nd);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+
+			this.deleteAndShift(nd);
+
 		}
 
 		size--;
 		return true;
 	}
 	
-	private Comparable deleteAndShift(Node nd) throws Exception{
+	private void deleteAndShift(Node nd){
 		
-		if(nd.getRightChild() == null && nd.getLeftChild() != null){
-			Comparable tmp = nd.getData(); 
-			nd.setData(nd.getLeftChild().getData());			
-			return tmp;
-		}
+		Node nullNode = this.nxtLevel.removeLast();
 		
-		if(nd.getRightChild() != null && nd.getLeftChild() != null){
-			Comparable lData = nd.getLeftChild().getData();
-			Comparable rData = nd.getRightChild().getData();
-			
-			int comp = lData.compareTo(rData);
-			Comparable tmp = nd.getData(); 
-			
-			
-			if(comp > 0){
-				nd.setData(deleteAndShift(nd.getRightChild()));
-			}else{
-				nd.setData(deleteAndShift(nd.getLeftChild()));
-			}
-			
-			return tmp;
-		}
+		nd.setData(nullNode.getData());
 		
-		
-		if(nd.getRightChild() == null && nd.getLeftChild() == null){
-			
-			Comparable tmp = nd.getData(); 
-			
-			Node p = nd.getParent();
-			
-			if(p.getLeftChild() == nd){
-				p.setLeftChild(null);
-				//move child from the end of nextLevel to here
-				//shift up
-			}
-			
-			
-			
-			
-			return tmp;
-			
-			
-			
-			
-			
-			
-			
-			
-			
+		if(nullNode.getParent().getLeftChild() == nullNode){
+			nullNode.getParent().setLeftChild(null);
 		}else{
-			throw new Exception("Bad Heap");
+			nullNode.getParent().setRightChild(null);
 		}
-			
-			
 		
 		
+		if(this.nxtLevel.isEmpty()){
+			for(Node nds : this.currLevel){
+				this.nxtLevel.add(nds);
+			}
+			this.currLevel.clear();
+		}else if(this.nxtLevel.getLast().getParent() != this.currLevel.peek()){
+			this.currLevel.push(this.nxtLevel.getLast().getParent());
+		}
+		nd = this.shiftDown(nd);
+		this.shiftUp(nd);
+	}
+	
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private Node shiftDown(Node nd){
+		Comparable tmp = nd.getData();
 		
+		if(nd.getLeftChild() != null && nd.getData().compareTo(nd.getLeftChild().getData()) > 0){
+			nd.setData(nd.getLeftChild().getData());
+			nd.getLeftChild().setData(tmp);
+			return this.shiftDown(nd.getLeftChild());
+		}
 		
+		if(nd.getRightChild() != null && nd.getData().compareTo(nd.getRightChild().getData()) > 0){
+			nd.setData(nd.getRightChild().getData());
+			nd.getRightChild().setData(tmp);
+			return this.shiftDown(nd.getRightChild());
+		}
+		return nd;
+	}
+	
+	private void printList(LinkedList<Node> lst){
 		
-		
-
+		for(Node tmp : lst){
+			System.out.print(tmp.getData() + ",");
+		}
+		System.out.println();
 	}
 	
 	public LinkedList<Node> inOrder(){
@@ -317,31 +310,60 @@ public class MinHeap<T extends Comparable> implements MyHeap {
 	
 	@Override
 	public Node makeHeap(Comparable value) {
-		// TODO Auto-generated method stub
-		return null;
+		this.clear();
+		this.insert(value);
+		return root;
 	}
 
 	@Override
 	public boolean deleteMin() {
-		// TODO Auto-generated method stub
+		this.delete(this.root);
 		return false;
 	}
 
 	@Override
 	public boolean decreaseKey(Node key, Comparable updateValue) {
-		// TODO Auto-generated method stub
-		return false;
+		try{
+			key.setData(updateValue);
+			key = this.shiftDown(key);
+			this.shiftUp(key);
+			return true;
+		}catch(Exception err){
+			return false;
+		}
 	}
 
 	@Override
 	public boolean union(MyHeap heap) {
-		// TODO Auto-generated method stub
+		LinkedList<Comparable> hpList = new LinkedList<Comparable>();
+		LinkedList<Comparable> thsList = new LinkedList<Comparable>();
+		LinkedList<Comparable> unList = new LinkedList<Comparable>();
+		
+		while(!heap.isEmpty()){
+			hpList.add(heap.findMin());
+			heap.deleteMin();
+			thsList.add(this.findMin());
+			this.deleteMin();
+			
+		}
+		
+		for(Comparable c : thsList){
+			if(!unList.contains(c)){
+				unList.add(c);
+			}
+		}
+		
+		for(Comparable c : thsList){
+			if(!unList.contains(c)){
+				unList.add(c);
+			}
+		}
+
 		return false;
 	}
 
 	@Override
-	public Comparable findMin() {
-		// TODO Auto-generated method stub
-		return null;
+	public Comparable findMin(){
+		return root.getData();
 	}	
 }
