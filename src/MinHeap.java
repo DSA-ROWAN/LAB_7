@@ -113,14 +113,17 @@ public class MinHeap<T extends Comparable> implements MyHeap {
 		if(nd == this.root && nd.getLeftChild() == null && nd.getRightChild() == null){
 			this.root = null;
 			nd = null;
+			size--;
+			return true;
 		}else{
-
-			this.deleteAndShift(nd);
-
+			try{
+				this.deleteAndShift(nd);
+				size--;
+				return true;
+			}catch(Exception err){
+				return false;
+			}
 		}
-
-		size--;
-		return true;
 	}
 	
 	private void deleteAndShift(Node nd){
@@ -187,75 +190,6 @@ public class MinHeap<T extends Comparable> implements MyHeap {
 			lst.add(node);
 			this._inOrder(node.getRightChild(), lst);
 		}
-	}	
-	
-	public int count(T val1, T val2){
-		int[] count = new int[1];
-		
-		if(val1.compareTo(val2) > 0){//val1 > val2 = -1
-			this._count(this.root, val2, val1, count);
-		}else{
-			this._count(this.root, val1, val2, count);
-		}		
-	
-		return count[0];
-	}
-	
-	public int _count(Node node, T minVal, T maxVal, int[] count){
-		if(node != null){
-			if(node.getLeftChild() != null && node.getLeftChild().getData().compareTo(node.getData()) < 0){
-				this._count(node.getLeftChild(), minVal, maxVal, count);
-			}
-			
-			if((node.getData().compareTo(minVal) > 0) && (node.getData().compareTo(maxVal) < 0)){
-				count[0]++;
-			}
-			
-			if(node.getRightChild() != null && node.getRightChild().getData().compareTo(node.getData()) > 0){
-				this._count(node.getRightChild(), minVal, maxVal, count);
-			}
-		}
-		return 0;
-	}
-	
-	public MinHeap<T> clone(){
-		MinHeap<T> newTree = new MinHeap<T>();
-		try {
-			if(this.root != null){
-				//this._clone(this.root, newTree.root(this.root.getData()));
-				newTree.size = this.size;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return newTree;
-	}
-	
-	private Node _clone(Node node, Node newNode) throws Exception{
-		if(node != null){
-			newNode.setData(node.getData());
-			Node newLeft = null;
-			Node newRight = null;
-			
-			if(node.getLeftChild() != null){
-				newLeft = new Node(node.getLeftChild().getData());
-				newLeft.setParent(newNode);
-				_clone(node.getLeftChild(), newLeft);
-			}
-			
-			if(node.getRightChild() != null){
-				newRight = new Node(node.getRightChild().getData());
-				newRight.setParent(newNode);
-				_clone(node.getRightChild(), newRight);
-			}
-			
-			newNode.setLeftChild(newLeft);
-			newNode.setRightChild(newRight);
-			
-			return null;
-		}else{
-			return node;
-		}
 	}
 	
     public void printTree()
@@ -292,7 +226,7 @@ public class MinHeap<T extends Comparable> implements MyHeap {
                 printVal += currNode.getData() + direction + " ";
                 if(currentLevel.size() > 0)
                 {
-                    printVal += "         ";
+                    printVal += "  ";
                 }
                 nextLevel.push(currNode.getLeftChild());
                 nextLevel.push(currNode.getRightChild());
@@ -310,8 +244,11 @@ public class MinHeap<T extends Comparable> implements MyHeap {
 	
 	@Override
 	public Node makeHeap(Comparable value) {
-		this.clear();
-		this.insert(value);
+		if(this.isEmpty()){
+			this.clear();
+			this.insert(value);
+		}
+		
 		return root;
 	}
 
@@ -335,35 +272,56 @@ public class MinHeap<T extends Comparable> implements MyHeap {
 
 	@Override
 	public boolean union(MyHeap heap) {
-		LinkedList<Comparable> hpList = new LinkedList<Comparable>();
-		LinkedList<Comparable> thsList = new LinkedList<Comparable>();
-		LinkedList<Comparable> unList = new LinkedList<Comparable>();
+		LinkedList<Node> hpList = new LinkedList<Node>();
+		this._inOrder(heap.makeHeap(null), hpList);
+		LinkedList<Node> thsList = this.inOrder();
 		
-		while(!heap.isEmpty()){
-			hpList.add(heap.findMin());
-			heap.deleteMin();
-			thsList.add(this.findMin());
-			this.deleteMin();
-			
-		}
+		boolean insert = false;
 		
-		for(Comparable c : thsList){
-			if(!unList.contains(c)){
-				unList.add(c);
+		for(Node hpNd : hpList){
+			insert = true;
+			for(Node nd : thsList){
+				if(nd.getData().equals(hpNd.getData())){
+					insert = false;
+				}
 			}
+			if(insert == true){this.insert(hpNd.getData());}
 		}
 		
-		for(Comparable c : thsList){
-			if(!unList.contains(c)){
-				unList.add(c);
-			}
-		}
-
-		return false;
+		return true;
 	}
 
 	@Override
 	public Comparable findMin(){
 		return root.getData();
 	}	
+	
+	public boolean validateMinHeap(){
+		if(this.isEmpty()){
+			return true;
+		}
+		return this._validateMinHeap(this.root);
+	}
+	
+	private boolean _validateMinHeap(Node nd){
+		boolean resultL = true;
+		boolean resultR = true;
+		if(nd.getLeftChild() != null){
+			if(nd.getLeftChild().getData().compareTo(nd.getData())  > 0){
+				resultL = this._validateMinHeap(nd.getLeftChild());
+			}else{
+				return false;
+			}
+		}
+		
+		if(nd.getRightChild() != null){
+			if(nd.getRightChild().getData().compareTo(nd.getData())  > 0){
+				resultR = this._validateMinHeap(nd.getRightChild());
+			}else{
+				return false;
+			}
+		}
+		
+		return (resultL && resultR);
+	}
 }

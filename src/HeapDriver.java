@@ -21,17 +21,18 @@ public class HeapDriver {
 		
 		MinHeap<Integer> minHp = new MinHeap<Integer>();		
 		
-//		for(int i : ints){
-//			minHp.insert(i);
-//		}
-//		System.out.println(minHp.size());
-//		minHp.printTree();
-		
 		for(int j = 0; j < 10; j++){
 			
 			for(int i = 0; i < 100; i++){
 				minHp.insert(Math.random());
 			}
+			
+			if(minHp.validateMinHeap()){
+				System.out.println("Valid Min Heap");
+			}else{
+				System.out.println("InValid Min Heap");
+			}
+
 			minHp.printTree();
 			while(minHp.size() > 0){
 				LinkedList<Node> nds = minHp.inOrder();
@@ -39,10 +40,7 @@ public class HeapDriver {
 				minHp.delete(nd);
 			}
 			
-			System.out.println(minHp.isEmpty());
-			
-			minHp.printTree();
-			
+			System.out.println("Heap is empty? : " + minHp.isEmpty());
 		}
 	}
 }
